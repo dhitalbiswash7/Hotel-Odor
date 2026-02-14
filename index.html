@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Hotel Odor Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background: #f4f4f4;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #333;
+      color: white;
+    }
+
+    td {
+      min-width: 100px;
+    }
+
+    input {
+      width: 100%;
+      border: none;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    input:focus {
+      outline: 2px solid #4CAF50;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Hotel Odor Room Tracker</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Room Number</th>
+      <th>Ozone Start</th>
+      <th>Ozone Finish</th>
+      <th>Kanki Start</th>
+      <th>Remarks</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody"></tbody>
+</table>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "PASTE_YOUR_API_KEY",
+    authDomain: "PASTE_YOUR_AUTH_DOMAIN",
+    databaseURL: "PASTE_YOUR_DATABASE_URL",
+    projectId: "PASTE_YOUR_PROJECT_ID",
+    storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
+    messagingSenderId: "PASTE_YOUR_SENDER_ID",
+    appId: "PASTE_YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const tableRef = ref(db, "rooms");
+
+  const tableBody = document.getElementById("tableBody");
+
+  function createRow(roomId, data = {}) {
+    const row = document.createElement("tr");
+    const fields = ["roomNumber", "ozoneStart", "ozoneFinish", "kankiStart", "remarks"];
+
+    fields.forEach(field => {
+      const cell = document.createElement("td");
+      const input = document.createElement("input");
+      input.value = data[field] || "";
+      input.addEventListener("change", () => {
+        saveData(roomId, field, input.value);
+      });
+      cell.appendChild(input);
+      row.appendChild(cell);
+    });
+
+    return row;
+  }
+
+  function saveData(roomId, field, value) {
+    set(ref(db, "rooms/" + roomId + "/" + field), value);
+  }
+
+  function renderTable(data) {
+    tableBody.innerHTML = "";
+    for (let i = 1; i <= 20; i++) {
+      const roomId = "room" + i;
+      const rowData = data ? data[roomId] : {};
+      tableBody.appendChild(createRow(roomId, rowData));
+    }
+  }
+
+  onValue(tableRef, (snapshot) => {
+    renderTable(snapshot.val());
+  });
+
+</script>
+
+</body>
+</html>
